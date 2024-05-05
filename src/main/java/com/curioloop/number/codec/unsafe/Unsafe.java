@@ -30,7 +30,6 @@ public class Unsafe {
     public static final String SUN_MISC_UNSAFE_CLASS = "sun.misc.Unsafe";
 
     public static final Object UNSAFE = getUnsafe();
-    public static final String UNSAFE_TYPE = UNSAFE == null ? "" : UNSAFE.getClass().getName();
 
     private static Object getUnsafe() {
         try {

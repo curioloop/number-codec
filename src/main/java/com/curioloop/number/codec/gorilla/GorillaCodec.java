@@ -74,14 +74,12 @@ public final class GorillaCodec {
         CodecException.notAllow(length <= 0);
         BitsWriter writer = new BitsWriter(buffer);
         int prevBlock = 0;
-        double previous = values.get(0);
-        writer.writeBits(Double.doubleToLongBits(previous), Double.SIZE);
+        long previous = Double.doubleToLongBits(values.get(0));
+        writer.writeBits(previous, Double.SIZE);
         for (int n = 1; n < length; n++) {
 
-            double value = values.get(n);
-            long a = Double.doubleToLongBits(previous);
-            long b = Double.doubleToLongBits(value);
-            long xor = a ^ b;
+            long current = Double.doubleToLongBits(values.get(n));
+            long xor = previous ^ current;
             int leadingZero = (short) Long.numberOfLeadingZeros(xor);
             int tailingZero = (short) Long.numberOfTrailingZeros(xor);
             long diffBits = xor >>> tailingZero;
@@ -91,7 +89,7 @@ public final class GorillaCodec {
             int currBlock = (leadingZero << MAX_BLOCK_SIZE_BITS) | diffSize;
             encodeBlock(writer, prevBlock, currBlock, diffBits);
             prevBlock = currBlock;
-            previous = value;
+            previous = current;
         }
         writer.flushBits();
         return buffer;
@@ -141,14 +139,12 @@ public final class GorillaCodec {
         CodecException.notAllow(length <= 0);
         BitsWriter writer = new BitsWriter(buffer);
         int prevBlock = 0;
-        float previous = values.get(0);
-        writer.writeBits(Float.floatToIntBits(previous), Float.SIZE);
+        int previous = Float.floatToIntBits(values.get(0));
+        writer.writeBits(previous, Float.SIZE);
         for (int n = 1; n < length; n++) {
 
-            float value = values.get(n);
-            int a = Float.floatToIntBits(previous);
-            int b = Float.floatToIntBits(value);
-            int xor = a ^ b;
+            int current = Float.floatToIntBits(values.get(n));
+            int xor = previous ^ current;
             int leadingZero = (short) Integer.numberOfLeadingZeros(xor);
             int tailingZero = (short) Integer.numberOfTrailingZeros(xor);
             int diffBits = xor >>> tailingZero;
@@ -158,7 +154,7 @@ public final class GorillaCodec {
             int currBlock = (leadingZero << MAX_BLOCK_SIZE_BITS) | diffSize;
             encodeBlock(writer, prevBlock, currBlock, diffBits);
             prevBlock = currBlock;
-            previous = value;
+            previous = current;
         }
         writer.flushBits();
         return buffer;

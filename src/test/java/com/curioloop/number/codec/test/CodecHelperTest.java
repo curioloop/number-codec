@@ -94,6 +94,15 @@ public class CodecHelperTest {
         Assertions.assertEquals(cr1.codecs(), CODEC_GORILLA);
         CodecHelper.decodeDouble(s.wrap(cr1.data()), cr1.codecs(), (i, v) -> Assertions.assertEquals(5000 - i, v));
 
+        double[] random = {470.3954297588686, 0.767862549332054, 2134.4581560362985, 0.7615757469862584, 7489629.29818493, 2085746393651.9005, 0.9139528881461843, 595871533556.732, 0.1469336564098932, 57.54422472855859};
+        CodecResult cr2 = CodecHelper.encodeDouble(i -> random[i], random.length);
+        Assertions.assertEquals(cr2.codecs(), CODEC_RAW);
+        CodecHelper.decodeDouble(s.wrap(cr2.data()), cr2.codecs(), (i, v) -> Assertions.assertEquals(v, random[i]));
+
+        double[] period = {470.3954297588686, 0.767862549332054, 2134.4581560362985, 470.3954297588686, 0.767862549332054, 2134.4581560362985, 470.3954297588686, 0.767862549332054, 2134.4581560362985, 470.3954297588686, 0.767862549332054, 2134.4581560362985};
+        CodecResult cr3 = CodecHelper.encodeDouble(i -> period[i], period.length);
+        Assertions.assertEquals(cr3.codecs(), CODEC_CHIMP);
+        CodecHelper.decodeDouble(s.wrap(cr3.data()), cr3.codecs(), (i, v) -> Assertions.assertEquals(v, period[i]));
     }
 
     @Test void testRaw() {

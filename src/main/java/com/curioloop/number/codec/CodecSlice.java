@@ -42,6 +42,7 @@ public class CodecSlice {
     }
 
     public CodecSlice wrap(byte[] value, int offset, int length) {
+        CodecException.notAllow((offset | length) < 0 || offset + length > value.length);
         this.value = value;
         this.offset = offset;
         this.length = length;

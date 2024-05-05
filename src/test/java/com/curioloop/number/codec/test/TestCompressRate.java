@@ -35,8 +35,8 @@ import static com.curioloop.number.codec.test.TestDataSample.*;
 
 public class TestCompressRate {
 
-    final String[] TRADE_SAMPLES = {"SEHK_2023-12-20_trade.gz", "NBBO_2023-12-15_trade.gz"};
-    final String[] KLINE_SAMPLES = {"SEHK_2023-12-20_kline.gz", "NBBO_2023-12-15_kline.gz"};
+    static final String[] TRADE_SAMPLES = {"SEHK_2023-12-20_trade.gz", "NBBO_2023-12-15_trade.gz"};
+    static final String[] KLINE_SAMPLES = {"SEHK_2023-12-20_kline.gz", "NBBO_2023-12-15_kline.gz"};
 
     @Test void testCompressKline() {
         for (String file : KLINE_SAMPLES) {
@@ -132,5 +132,6 @@ public class TestCompressRate {
             }
         }
     }
+
 
 }

@@ -2,7 +2,8 @@
 Lightweight implementation of popular lossless numerical compression algorithms
 
 ### Support encodings
-- **[Gorilla](src/main/java/com/curioloop/number/codec/gorilla/GorillaCodec.java):** Lossless float point number compression
+- **[Gorilla](src/main/java/com/curioloop/number/codec/gorilla/GorillaCodec.java):** Fast lossless float point number compression
+- **[Chimp](src/main/java/com/curioloop/number/codec/chimp/ChimpN.java):** Adaptive lossless float point number compression
 - **[VarInt](src/main/java/com/curioloop/number/codec/varint/VarInt.java):** Variable-length integer encoding for unsigned integer
 - **[ZigZag](src/main/java/com/curioloop/number/codec/varint/ZigZag.java):** Variable-length integer encoding for signed integer
 - **[Simple8](src/main/java/com/curioloop/number/codec/simple8/Simple8Codec.java):** Packing multiple integers into a single 64-bit word
@@ -31,7 +32,7 @@ This approach effectively slashes network bandwidth consumption and curtails dis
         <dependency>
             <groupId>com.curioloop</groupId>
             <artifactId>number-codec</artifactId>
-            <version>1.0.0</version>
+            <version>1.1.0</version>
         </dependency>
     </dependencies>
 

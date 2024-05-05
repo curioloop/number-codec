@@ -40,7 +40,8 @@ public class CodecResult {
             CODEC_VAR_INT = 1 << 2, // VarInt encoding scheme
             CODEC_ZIGZAG =  1 << 3, // ZigZag encoding scheme
             CODEC_SIMPLE8 = 1 << 4, // Simple8 encoding scheme
-            CODEC_DELTA2 =  1 << 5; // Delta2 encoding scheme
+            CODEC_DELTA2 =  1 << 5, // Delta2 encoding scheme
+            CODEC_CHIMP =   1 << 6; // Chimp encoding scheme
 
     private final byte[] data;
     private final int codecs;

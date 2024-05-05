@@ -15,6 +15,7 @@
  */
 package com.curioloop.number.codec;
 
+import com.curioloop.number.codec.chimp.ChimpCodec;
 import com.curioloop.number.codec.delta2.Delta2Codec;
 import com.curioloop.number.codec.gorilla.GorillaCodec;
 import com.curioloop.number.codec.simple8.Simple8Codec;
@@ -78,18 +79,30 @@ public class CodecHelper {
      */
     public static CodecResult encodeFloat(FloatGetter values, final int length) throws CodecException {
         // codec float / double
-        // 1. try xor
-        // 2. store raw data
+        // 1. try gorilla
+        // 2. try chimp32
+        // 3. store raw data
         CodecException.notAllow(values == null || length <= 0);
+        final int rawCodec = length * Float.BYTES;
+
+        CodecBuffer buffer = new CodecBuffer(8 + length * 2);
         try {
-            CodecBuffer buffer = new CodecBuffer(8 + length * 2);
-            GorillaCodec.encode32(values, length, buffer);
-            return CodecResult.of(buffer.toArray(), CodecResult.CODEC_GORILLA);
-        } catch (CodecException.ValueOverflow overflow) {
-            CodecBuffer buffer = CodecBuffer.newBuffer(Float.BYTES * length);
-            CodecSlice slice = encodeRaw(values, length, buffer).releaseBuf();
-            return CodecResult.of(slice.value(), CodecResult.CODEC_RAW);
-        }
+            GorillaCodec.encode32(values, length, buffer.forgetPos());
+            if (buffer.position() < rawCodec) {
+                return CodecResult.of(buffer.toArray(), CodecResult.CODEC_GORILLA);
+            }
+        } catch (CodecException.ValueOverflow ignore) {}
+
+        try {
+            ChimpCodec.encode32(values, length, buffer.forgetPos(), 32);
+            if (buffer.position() < rawCodec) {
+                return CodecResult.of(buffer.toArray(), CodecResult.CODEC_CHIMP);
+            }
+        } catch (CodecException.ValueOverflow ignore) {}
+
+        buffer = CodecBuffer.newBuffer(Float.BYTES * length);
+        CodecSlice slice = encodeRaw(values, length, buffer).releaseBuf();
+        return CodecResult.of(slice.value(), CodecResult.CODEC_RAW);
     }
 
     /**
@@ -104,6 +117,8 @@ public class CodecHelper {
         CodecException.notAllow(slice == null || stream == null);
         if (codecs == CodecResult.CODEC_GORILLA) {
             GorillaCodec.decode32(slice, stream);
+        } else if (codecs == CodecResult.CODEC_CHIMP) {
+            ChimpCodec.decode32(slice, stream);
         } else {
             CodecException.notAllow(codecs != CodecResult.CODEC_RAW);
             decodeRaw(slice.value(), slice.offset(), slice.length(), stream);
@@ -120,15 +135,26 @@ public class CodecHelper {
      */
     public static CodecResult encodeDouble(DoubleGetter values, final int length) throws CodecException {
         CodecException.notAllow(values == null || length <= 0);
+        final int rawCodec = length * Double.BYTES;
+
+        CodecBuffer buffer = new CodecBuffer(8 + length * 2);
         try {
-            CodecBuffer buffer = new CodecBuffer(8 + length * 2);
             GorillaCodec.encode64(values, length, buffer);
-            return CodecResult.of(buffer.toArray(), CodecResult.CODEC_GORILLA);
-        } catch (CodecException.ValueOverflow overflow) {
-            CodecBuffer buffer = CodecBuffer.newBuffer(Double.BYTES * length);
-            CodecSlice slice = encodeRaw(values, length, buffer).releaseBuf();
-            return CodecResult.of(slice.value(), CodecResult.CODEC_RAW);
-        }
+            if (buffer.position() < rawCodec) {
+                return CodecResult.of(buffer.toArray(), CodecResult.CODEC_GORILLA);
+            }
+        } catch (CodecException.ValueOverflow ignore) {}
+
+        try {
+            ChimpCodec.encode64(values, length, buffer.forgetPos(), 32);
+            if (buffer.position() < rawCodec) {
+                return CodecResult.of(buffer.toArray(), CodecResult.CODEC_CHIMP);
+            }
+        } catch (CodecException.ValueOverflow ignore) {}
+
+        buffer = CodecBuffer.newBuffer(Double.BYTES * length);
+        CodecSlice slice = encodeRaw(values, length, buffer).releaseBuf();
+        return CodecResult.of(slice.value(), CodecResult.CODEC_RAW);
     }
 
     /**
@@ -143,6 +169,8 @@ public class CodecHelper {
         CodecException.notAllow(slice == null || stream == null);
         if (codecs == CodecResult.CODEC_GORILLA) {
             GorillaCodec.decode64(slice, stream);
+        } else if (codecs == CodecResult.CODEC_CHIMP) {
+            ChimpCodec.decode64(slice, stream);
         } else {
             CodecException.notAllow(codecs != CodecResult.CODEC_RAW);
             decodeRaw(slice.value(), slice.offset(), slice.length(), stream);
