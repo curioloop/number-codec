@@ -17,27 +17,32 @@ package com.curioloop.number.codec.delta2;
 
 import com.curioloop.number.codec.stream.LongSetter;
 import com.curioloop.number.codec.CodecException;
-import lombok.RequiredArgsConstructor;
 
 /**
  * @author curioloops@gmail.com
  * @since 2024/4/22
  */
-@RequiredArgsConstructor
-final class Delta2Setter implements LongSetter {
+public class Delta2Setter implements LongSetter {
 
-    final LongSetter stream;
+    protected final LongSetter stream;
 
-    int expectedIndex = 0;
-    long accumulator = 0;
+    protected long base;
+    protected int offset;
+    protected int expected = 0;
+
+    public Delta2Setter(LongSetter stream, long base, int offset) {
+        this.stream = stream;
+        this.base = base;
+        this.offset = offset;
+    }
 
     @Override
     public void set(int index, long value) {
-        CodecException.notAllow(index != expectedIndex);
-        long accumulatedVal = accumulator + value;
-        stream.set(index, accumulatedVal);
-        accumulator = accumulatedVal;
-        expectedIndex++;
+        CodecException.notAllow(index != expected);
+        long next = base + value;
+        stream.set(offset + index, next);
+        base = next;
+        expected++;
     }
 
 }

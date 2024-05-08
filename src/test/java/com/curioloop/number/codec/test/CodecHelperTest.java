@@ -34,9 +34,13 @@ public class CodecHelperTest {
         Assertions.assertEquals(cr1.codecs(), CODEC_DELTA2 | CODEC_SIMPLE8);
         CodecHelper.decodeDelta2(s.wrap(cr1.data()), cr1.codecs(), Assertions::assertEquals);
 
-        CodecResult cr2 = CodecHelper.encodeDelta2(i -> 10000 - i, 10000);
-        Assertions.assertEquals(cr2.codecs(), CODEC_DELTA2 | CODEC_ZIGZAG);
-        CodecHelper.decodeDelta2(s.wrap(cr2.data()), cr2.codecs(), (i, v) -> Assertions.assertEquals( 10000 - i, v));
+        CodecResult cr2 = CodecHelper.encodeDelta2(i -> -10000 + i, 10000);
+        Assertions.assertEquals(cr2.codecs(), CODEC_DELTA2 | CODEC_SIMPLE8);
+        CodecHelper.decodeDelta2(s.wrap(cr2.data()), cr2.codecs(), (i, v) -> Assertions.assertEquals( -10000 + i, v));
+
+        CodecResult cr3 = CodecHelper.encodeDelta2(i -> 10000 - i, 10000);
+        Assertions.assertEquals(cr3.codecs(), CODEC_DELTA2 | CODEC_ZIGZAG);
+        CodecHelper.decodeDelta2(s.wrap(cr3.data()), cr3.codecs(), (i, v) -> Assertions.assertEquals( 10000 - i, v));
     }
 
     @Test void testInt() {

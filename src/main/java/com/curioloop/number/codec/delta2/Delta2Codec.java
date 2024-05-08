@@ -44,9 +44,11 @@ public class Delta2Codec {
      */
     public static CodecBuffer encode(LongGetter values, final int length, boolean ordered, CodecBuffer buffer) throws CodecException {
         if (ordered) { // the delta of ordered value is always positive
-            Simple8Codec.encode(new Delta2Getter(true, values), length, buffer);
+            final long base = values.get(0);
+            buffer.putLong(base);
+            Simple8Codec.encode(new Delta2Getter( true, values, base, 1), length - 1, buffer);
         } else {
-            VarIntCodec.encode64(new Delta2Getter(false, values), length, false, buffer);
+            VarIntCodec.encode64(new Delta2Getter(false, values, 0, 0), length, false, buffer);
         }
         return buffer;
     }
@@ -62,9 +64,18 @@ public class Delta2Codec {
      */
     public static int decode(CodecSlice slice, LongSetter stream, boolean ordered) throws CodecException {
         if (ordered) {
-            return Simple8Codec.decode(slice, new Delta2Setter(stream));
+            final byte[] value = slice.value();
+            final int offset = slice.offset(), length = slice.length();
+            slice = slice.wrap(value, offset + 8, length - 8);
+            final long base = CodecSlice.getLong(value, offset);
+            stream.set(0, base);
+            try {
+                return Simple8Codec.decode(slice.wrap(value, offset + 8, length - 8), new Delta2Setter(stream, base, 1));
+            } finally {
+                slice.wrap(value, offset, length);
+            }
         } else {
-            return VarIntCodec.decode64(slice, new Delta2Setter(stream), false);
+            return VarIntCodec.decode64(slice, new Delta2Setter(stream, 0, 0), false);
         }
     }
 

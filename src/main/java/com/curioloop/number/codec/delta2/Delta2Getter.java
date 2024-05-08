@@ -24,16 +24,20 @@ import lombok.RequiredArgsConstructor;
  * @since 2024/4/22
  */
 @RequiredArgsConstructor
-final class Delta2Getter implements LongGetter {
+public class Delta2Getter implements LongGetter {
 
-    final boolean sorted;
-    final LongGetter timestamps; // sorted timestamp
+    protected final boolean sorted;
+    protected final LongGetter values;
+
+    protected final long base;
+    protected final int offset;
 
     public long get(int i) {
-        long current = timestamps.get(i);
-        long previous = i == 0 ? 0 : timestamps.get(i-1);
+        int offset = this.offset;
+        long current = values.get(offset+i);
+        long previous = i == 0 ? base : values.get(offset+i-1);
         long delta2 = current - previous;
-        CodecException.valueOverflow(sorted && delta2 < 0);
+        CodecException.valueOverflow(sorted && i == 0 && delta2 < 0);
         return delta2;
     }
 
