@@ -64,10 +64,9 @@ public class Simple8Codec {
      *
      * @param slice The CodecSlice to decode.
      * @param stream The LongSetter stream to write the decoded values to.
-     * @return The number of values decoded.
      * @throws CodecException If the CodecSlice is malformed.
      */
-    public static int decode(CodecSlice slice, LongSetter stream) {
+    public static void decode(CodecSlice slice, LongSetter stream) {
         int count = 0;
         CodecException.malformedData(slice.length() % 8 > 0);
         final byte[] bytes = slice.value();
@@ -78,7 +77,6 @@ public class Simple8Codec {
             packing.unpack(v, stream, count);
             count += packing.integersCoded;
         }
-        return count;
     }
 
 }

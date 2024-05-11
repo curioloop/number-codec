@@ -32,7 +32,7 @@ This approach effectively slashes network bandwidth consumption and curtails dis
         <dependency>
             <groupId>com.curioloop</groupId>
             <artifactId>number-codec</artifactId>
-            <version>1.1.0</version>
+            <version>1.2.0</version>
         </dependency>
     </dependencies>
 
@@ -44,25 +44,26 @@ This approach effectively slashes network bandwidth consumption and curtails dis
 public static void main(String[] args) {
 
     CodecSlice slice = new CodecSlice();
+    CodecBuffer buffer = new CodecBuffer(128);
 
     // Encode and decode with delta2
-    CodecResult cr1 = CodecHelper.encodeDelta2(i -> i, 10000);
+    CodecResult cr1 = CodecHelper.encodeDelta2(i -> i, 10000, buffer);
     CodecHelper.decodeDelta2(slice.wrap(cr1.data()), cr1.codecs(), Assertions::assertEquals);
 
     // Encode and decode integers
-    CodecResult cr2 = CodecHelper.encodeInt(i -> i, 10000, true);
+    CodecResult cr2 = CodecHelper.encodeInt(i -> i, 10000, true, buffer);
     CodecHelper.decodeInt(slice.wrap(cr2.data()), cr2.codecs(), Assertions::assertEquals);
 
     // Encode and decode longs
-    CodecResult cr3 = CodecHelper.encodeLong(i -> i, 10000, true);
+    CodecResult cr3 = CodecHelper.encodeLong(i -> i, 10000, true, buffer);
     CodecHelper.decodeLong(slice.wrap(cr3.data()), cr3.codecs(), Assertions::assertEquals);
 
     // Encode and decode floats
-    CodecResult cr4 = CodecHelper.encodeFloat(i -> i, 10000);
+    CodecResult cr4 = CodecHelper.encodeFloat(i -> i, 10000, buffer);
     CodecHelper.decodeFloat(slice.wrap(cr4.data()), cr4.codecs(), Assertions::assertEquals);
 
     // Encode and decode doubles
-    CodecResult cr5 = CodecHelper.encodeDouble(i -> i, 10000);
+    CodecResult cr5 = CodecHelper.encodeDouble(i -> i, 10000, buffer);
     CodecHelper.decodeDouble(slice.wrap(cr5.data()), cr5.codecs(), Assertions::assertEquals);
     
 }

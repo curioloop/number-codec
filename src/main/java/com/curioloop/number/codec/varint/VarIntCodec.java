@@ -113,10 +113,9 @@ public class VarIntCodec {
      * @param slice    the CodecSlice containing the encoded data
      * @param stream   the LongSetter to receive the decoded values
      * @param unsigned whether the values were encoded as unsigned
-     * @return the number of decoded values
      * @throws CodecException if decoding fails due to invalid input or buffer overflow
      */
-    public static int decode64(CodecSlice slice, LongSetter stream, boolean unsigned) throws CodecException {
+    public static void decode64(CodecSlice slice, LongSetter stream, boolean unsigned) throws CodecException {
         int count = 0, offset = slice.offset(), length = slice.length();
         int[] cursor = {offset};
         if (unsigned) {
@@ -130,7 +129,6 @@ public class VarIntCodec {
                 stream.set(count++, value);
             }
         }
-        return count;
     }
 
 }

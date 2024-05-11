@@ -109,8 +109,8 @@ public class ChimpCodecTest {
                     byte[] doubleBits = ChimpCodec.encode64(doubles::get, doubles.size(), buffer.forgetPos(), N).toArray();
 
                     System.out.printf("%s(%d)\t:\t%d -> %d (%.2f) \t %d -> %d (%.2f)\n", entry.getKey(), N,
-                            doubles.size() * 8, doubleBits.length, (double) doubleBits.length / doubles.size() * 8,
-                            floats.size() * 4, floatBits.length, (double) floatBits.length / floats.size() * 4);
+                            doubles.size() * 8, doubleBits.length, (double) doubleBits.length / (doubles.size() * 8),
+                            floats.size() * 4, floatBits.length, (double) floatBits.length / (floats.size() * 4));
 
                     List<Float> recover32 = new ArrayList<>();
                     ChimpCodec.decode32(slice.wrap(floatBits), (i, v) -> recover32.add(v));
@@ -141,8 +141,8 @@ public class ChimpCodecTest {
                     byte[] doubleBits = ChimpCodec.encode64(doubles::get, doubles.size(), buffer.forgetPos(), N).toArray();
 
                     System.out.printf("%s(%d)\t:\t%d -> %d (%.2f) \t %d -> %d (%.2f)\n", entry.getKey(), N,
-                            doubles.size() * 8, doubleBits.length, (double) doubleBits.length / doubles.size() * 8,
-                            floats.size() * 4, floatBits.length, (double) floatBits.length / floats.size() * 4);
+                            doubles.size() * 8, doubleBits.length, (double) doubleBits.length / (doubles.size() * 8),
+                            floats.size() * 4, floatBits.length, (double) floatBits.length / (floats.size() * 4));
 
                     List<Float> recover32 = new ArrayList<>();
                     ChimpCodec.decode32(slice.wrap(floatBits), (i, v) -> recover32.add(v));

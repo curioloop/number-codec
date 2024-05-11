@@ -32,19 +32,24 @@ import com.curioloop.number.codec.varint.VarIntStream;
 public class CodecHelper {
 
     /**
-     * Encodes delta values using different codecs and handles overflow scenarios.
+     * Specify the ring buffer size of Chimp
+     */
+    public static int DEFAULT_CHIMP_N = 32;
+
+    /**
+     * Encodes delta values with various codecs.
      *
      * @param values  the values to encode
      * @param length  the length of the values array
+     * @param buffer  the CodecBuffer to store encoded data
      * @return a CodecResult object containing the encoded data and codec type
      * @throws CodecException if encoding fails due to invalid input or overflow
      */
-    public static CodecResult encodeDelta2(LongGetter values, final int length) throws CodecException {
+    public static CodecResult encodeDelta2(LongGetter values, final int length, CodecBuffer buffer) throws CodecException {
         // codec delta2
         // 1. try delta2-simple8b (sorted number)
         // 2. store delta2-zigzag (unsorted number)
         CodecException.notAllow(values == null || length <= 0);
-        CodecBuffer buffer = new CodecBuffer(64);
         try {
             Delta2Codec.encode(values, length, true, buffer.forgetPos());
             return CodecResult.of(buffer.toArray(), CodecResult.CODEC_DELTA2 | CodecResult.CODEC_SIMPLE8);
@@ -55,37 +60,36 @@ public class CodecHelper {
     }
 
     /**
-     * Decodes delta values encoded using different codecs.
+     * Decodes delta values with specific codecs.
      *
      * @param slice   the CodecSlice containing the encoded data
      * @param codecs  the codec type used for encoding
      * @param stream  the LongSetter to receive the decoded values
-     * @return the number of decoded values
      * @throws CodecException if decoding fails due to invalid input or codec mismatch
      */
-    public static int decodeDelta2(CodecSlice slice, int codecs, LongSetter stream) throws CodecException {
+    public static void decodeDelta2(CodecSlice slice, int codecs, LongSetter stream) throws CodecException {
         CodecException.notAllow(slice == null || stream == null);
         CodecException.notAllow((codecs & CodecResult.CODEC_DELTA2) == 0 || (codecs & (CodecResult.CODEC_SIMPLE8 | CodecResult.CODEC_ZIGZAG)) == 0);
-        return Delta2Codec.decode(slice, stream, (codecs & CodecResult.CODEC_ZIGZAG) == 0);
+        Delta2Codec.decode(slice, stream, (codecs & CodecResult.CODEC_ZIGZAG) == 0);
     }
 
     /**
-     * Encodes floating-point values using different codecs and handles overflow scenarios.
+     * Encodes float values with various codecs.
      *
      * @param values  the values to encode
      * @param length  the length of the values array
+     * @param buffer  the CodecBuffer to store encoded data
      * @return a CodecResult object containing the encoded data and codec type
      * @throws CodecException if encoding fails due to invalid input or overflow
      */
-    public static CodecResult encodeFloat(FloatGetter values, final int length) throws CodecException {
+    public static CodecResult encodeFloat(FloatGetter values, final int length, CodecBuffer buffer) throws CodecException {
         // codec float / double
         // 1. try gorilla
         // 2. try chimp32
         // 3. store raw data
         CodecException.notAllow(values == null || length <= 0);
-        final int rawCodec = length * Float.BYTES;
+        final int rawCodec = Float.BYTES * length;
 
-        CodecBuffer buffer = new CodecBuffer(8 + length * 2);
         try {
             GorillaCodec.encode32(values, length, buffer.forgetPos());
             if (buffer.position() < rawCodec) {
@@ -94,19 +98,19 @@ public class CodecHelper {
         } catch (CodecException.ValueOverflow ignore) {}
 
         try {
-            ChimpCodec.encode32(values, length, buffer.forgetPos(), 32);
+            ChimpCodec.encode32(values, length, buffer.forgetPos(), DEFAULT_CHIMP_N);
             if (buffer.position() < rawCodec) {
                 return CodecResult.of(buffer.toArray(), CodecResult.CODEC_CHIMP);
             }
         } catch (CodecException.ValueOverflow ignore) {}
 
-        buffer = CodecBuffer.newBuffer(Float.BYTES * length);
+        buffer = CodecBuffer.newBuffer(rawCodec);
         CodecSlice slice = encodeRaw(values, length, buffer).releaseBuf();
         return CodecResult.of(slice.value(), CodecResult.CODEC_RAW);
     }
 
     /**
-     * Decodes floating-point values encoded using different codecs.
+     * Decodes float values with specific codecs.
      *
      * @param slice   the CodecSlice containing the encoded data
      * @param codecs  the codec type used for encoding
@@ -126,39 +130,39 @@ public class CodecHelper {
     }
 
     /**
-     * Encodes double values using different codecs and handles overflow scenarios.
+     * Encodes double values with various codecs.
      *
      * @param values  the values to encode
      * @param length  the length of the values array
+     * @param buffer  the CodecBuffer to store encoded data
      * @return a CodecResult object containing the encoded data and codec type
      * @throws CodecException if encoding fails due to invalid input or overflow
      */
-    public static CodecResult encodeDouble(DoubleGetter values, final int length) throws CodecException {
+    public static CodecResult encodeDouble(DoubleGetter values, final int length, CodecBuffer buffer) throws CodecException {
         CodecException.notAllow(values == null || length <= 0);
-        final int rawCodec = length * Double.BYTES;
+        final int rawCodec = Double.BYTES * length;
 
-        CodecBuffer buffer = new CodecBuffer(8 + length * 2);
         try {
-            GorillaCodec.encode64(values, length, buffer);
+            GorillaCodec.encode64(values, length, buffer.forgetPos());
             if (buffer.position() < rawCodec) {
                 return CodecResult.of(buffer.toArray(), CodecResult.CODEC_GORILLA);
             }
         } catch (CodecException.ValueOverflow ignore) {}
 
         try {
-            ChimpCodec.encode64(values, length, buffer.forgetPos(), 32);
+            ChimpCodec.encode64(values, length, buffer.forgetPos(), DEFAULT_CHIMP_N);
             if (buffer.position() < rawCodec) {
                 return CodecResult.of(buffer.toArray(), CodecResult.CODEC_CHIMP);
             }
         } catch (CodecException.ValueOverflow ignore) {}
 
-        buffer = CodecBuffer.newBuffer(Double.BYTES * length);
+        buffer = CodecBuffer.newBuffer(rawCodec);
         CodecSlice slice = encodeRaw(values, length, buffer).releaseBuf();
         return CodecResult.of(slice.value(), CodecResult.CODEC_RAW);
     }
 
     /**
-     * Decodes double values encoded using different codecs.
+     * Decodes double values with specific codecs.
      *
      * @param slice   the CodecSlice containing the encoded data
      * @param codecs  the codec type used for encoding
@@ -178,42 +182,42 @@ public class CodecHelper {
     }
 
     /**
-     * Encodes integer values using different codecs and handles overflow scenarios.
+     * Encodes integer values with various codecs.
      *
      * @param values   the values to encode
      * @param length   the length of the values array
      * @param unsigned whether the values are unsigned
+     * @param buffer  the CodecBuffer to store encoded data
      * @return a CodecResult object containing the encoded data and codec type
      * @throws CodecException if encoding fails due to invalid input or overflow
      */
-    public static CodecResult encodeInt(IntGetter values, final int length, boolean unsigned) throws CodecException {
+    public static CodecResult encodeInt(IntGetter values, final int length, boolean unsigned, CodecBuffer buffer) throws CodecException {
         // codec integer / long
         // 1. try zigzag-simple8b
         // 2. try zigzag
         // 3. store raw data
         CodecException.notAllow(values == null || length <= 0);
-        final int rawCodec = length * 4;
-        CodecBuffer buffer = new CodecBuffer(64);
-        VarIntStream.Encoder32 varInt = VarIntStream.encode32(values, unsigned);
+        final int rawCodec = Integer.BYTES * length;
+        VarIntStream.Encoder32 varCodec = VarIntStream.encode32(values, unsigned);
         try {
-            Simple8Codec.encode(varInt, length, buffer);
-            if (buffer.position() < varInt.bytes() && buffer.position() < rawCodec) {
+            Simple8Codec.encode(varCodec, length, buffer.forgetPos());
+            if (buffer.position() < varCodec.bytes() && buffer.position() < rawCodec) {
                 return CodecResult.of(buffer.toArray(), CodecResult.CODEC_SIMPLE8 | (unsigned ? CodecResult.CODEC_VAR_INT : CodecResult.CODEC_ZIGZAG));
             }
         } catch (CodecException.ValueOverflow ignore) {}
 
-        if (varInt.bytes() < rawCodec) {
+        if (varCodec.bytes() < rawCodec) {
             VarIntCodec.encode32(values, length, unsigned, buffer.forgetPos());
             return CodecResult.of(buffer.toArray(), unsigned ? CodecResult.CODEC_VAR_INT : CodecResult.CODEC_ZIGZAG);
         }
 
-        buffer = CodecBuffer.newBuffer(Integer.BYTES * length);
+        buffer = CodecBuffer.newBuffer(rawCodec);
         CodecSlice slice = encodeRaw(values, length, buffer).releaseBuf();
         return CodecResult.of(slice.value(), CodecResult.CODEC_RAW);
     }
 
     /**
-     * Decodes integer values encoded using different codecs.
+     * Decodes integer values with specific codecs.
      *
      * @param slice    the CodecSlice containing the encoded data
      * @param codecs   the codec type used for encoding
@@ -233,38 +237,38 @@ public class CodecHelper {
     }
 
     /**
-     * Encodes long values using different codecs and handles overflow scenarios.
+     * Encodes long values with various codecs.
      *
      * @param values   the values to encode
      * @param length   the length of the values array
      * @param unsigned whether the values are unsigned
+     * @param buffer   the CodecBuffer to store encoded data
      * @return a CodecResult object containing the encoded data and codec type
      * @throws CodecException if encoding fails due to invalid input or overflow
      */
-    public static CodecResult encodeLong(LongGetter values, final int length, boolean unsigned) throws CodecException {
+    public static CodecResult encodeLong(LongGetter values, final int length, boolean unsigned, CodecBuffer buffer) throws CodecException {
         CodecException.notAllow(values == null || length <= 0);
-        final int rawCodec = length * 8;
-        CodecBuffer buffer = new CodecBuffer(64);
-        VarIntStream.Encoder64 zigzag = VarIntStream.encode64(values, unsigned);
+        final int rawCodec = Long.BYTES * length;
+        VarIntStream.Encoder64 varCodec = VarIntStream.encode64(values, unsigned);
         try {
-            Simple8Codec.encode(zigzag, length, buffer);
-            if (buffer.position() < zigzag.bytes() && buffer.position() < rawCodec) {
+            Simple8Codec.encode(varCodec, length, buffer.forgetPos());
+            if (buffer.position() < varCodec.bytes() && buffer.position() < rawCodec) {
                 return CodecResult.of(buffer.toArray(), CodecResult.CODEC_SIMPLE8 | (unsigned ? CodecResult.CODEC_VAR_INT : CodecResult.CODEC_ZIGZAG));
             }
         } catch (CodecException.ValueOverflow ignore) { }
 
-        if (zigzag.bytes() < rawCodec) {
+        if (varCodec.bytes() < rawCodec) {
             VarIntCodec.encode64(values, length, unsigned, buffer.forgetPos());
             return CodecResult.of(buffer.toArray(), unsigned ? CodecResult.CODEC_VAR_INT : CodecResult.CODEC_ZIGZAG);
         }
 
-        buffer = CodecBuffer.newBuffer(Long.BYTES * length);
+        buffer = CodecBuffer.newBuffer(rawCodec);
         CodecSlice slice = encodeRaw(values, length, buffer).releaseBuf();
         return CodecResult.of(slice.value(), CodecResult.CODEC_RAW);
     }
 
     /**
-     * Decodes long values encoded using different codecs.
+     * Decodes long values with specific codecs.
      *
      * @param slice    the CodecSlice containing the encoded data
      * @param codecs   the codec type used for encoding

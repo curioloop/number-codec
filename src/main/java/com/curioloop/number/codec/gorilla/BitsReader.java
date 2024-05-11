@@ -93,8 +93,7 @@ public class BitsReader {
      * @throws CodecException if numOfBits is invalid or if there are no more bits to read.
      */
     public long readBits(int numOfBits) {
-        CodecException.malformedData(numOfBits <= 0 || numOfBits > 64);
-        CodecException.malformedData(bitCursor + numOfBits > totalBits);
+        CodecException.malformedData(numOfBits <= 0 || numOfBits > 64 || bitCursor + numOfBits > totalBits);
         int rest = 8 - bitCursor % 8;
         if (numOfBits <= rest) {
             return nextBits(numOfBits);

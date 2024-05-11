@@ -59,10 +59,9 @@ public class Delta2Codec {
      * @param slice The CodecSlice to decode.
      * @param stream The LongSetter stream to write the decoded values to.
      * @param ordered Specifies whether the values are ordered or not.
-     * @return The number of values decoded.
      * @throws CodecException If the CodecSlice is malformed.
      */
-    public static int decode(CodecSlice slice, LongSetter stream, boolean ordered) throws CodecException {
+    public static void decode(CodecSlice slice, LongSetter stream, boolean ordered) throws CodecException {
         if (ordered) {
             final byte[] value = slice.value();
             final int offset = slice.offset(), length = slice.length();
@@ -70,12 +69,12 @@ public class Delta2Codec {
             final long base = CodecSlice.getLong(value, offset);
             stream.set(0, base);
             try {
-                return Simple8Codec.decode(slice.wrap(value, offset + 8, length - 8), new Delta2Setter(stream, base, 1));
+                Simple8Codec.decode(slice.wrap(value, offset + 8, length - 8), new Delta2Setter(stream, base, 1));
             } finally {
                 slice.wrap(value, offset, length);
             }
         } else {
-            return VarIntCodec.decode64(slice, new Delta2Setter(stream, 0, 0), false);
+            VarIntCodec.decode64(slice, new Delta2Setter(stream, 0, 0), false);
         }
     }
 
