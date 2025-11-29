@@ -57,9 +57,9 @@ public class CodecSlice {
         long getLong(byte[] bytes, int position);
     }
 
-    public static final int BYTES_OFFSET =
-            Unsafe.ARRAY_OFFSET == null ? 0 :
-            Unsafe.ARRAY_OFFSET.arrayBaseOffset(byte[].class);
+    public static final long BYTES_OFFSET =
+            Unsafe.UNSAFE == null ? 0 :
+            Unsafe.arrayBaseOffset(byte[].class, null);
 
     private static final GetIntFromBytes GET_INT_FROM_BYTES =
             Unsafe.GET_INT == null ? CodecSlice::getIntSafe : nativeOrder() == LITTLE_ENDIAN ?

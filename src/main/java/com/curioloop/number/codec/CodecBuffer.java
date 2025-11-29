@@ -244,7 +244,7 @@ public class CodecBuffer {
      * @return A new CodecBuffer instance.
      */
     public static CodecBuffer newBuffer(int initialCapacity, boolean preferUnsafe) {
-        if (UNSAFE == null || !preferUnsafe)
+        if (BYTES_OFFSET == 0 || !preferUnsafe)
             return new CodecBuffer(initialCapacity);
         return nativeOrder() == LITTLE_ENDIAN ?
                 new UnsafeLE(initialCapacity) : new UnsafeBE(initialCapacity);

@@ -33,7 +33,7 @@ public class UnsafeAccessPerf {
     static final PutInt PUT_INT = Unsafe.PUT_INT;
     static final GetInt GET_INT = Unsafe.GET_INT;
 
-    static final int OFFSET = Unsafe.ARRAY_OFFSET.arrayBaseOffset(byte[].class);
+    static final long OFFSET = Unsafe.arrayBaseOffset(byte[].class, null);
     static final byte[] bytes = new byte[100];
     static int summary;
 

@@ -15,6 +15,8 @@
  */
 package com.curioloop.number.codec.unsafe;
 
+import lombok.SneakyThrows;
+
 import java.lang.invoke.*;
 import java.lang.reflect.Field;
 
@@ -53,21 +55,22 @@ public class Unsafe {
     }
 
     /**
-     * Wraps Unsafe methods.
+     * Wraps Unsafe methods with specific lookup.
      *
      * @param lambdaClass  The lambda class.
      * @param signature    The method signature.
      * @param lambdaName   The lambda name.
      * @param unsafeName   The name of the unsafe operation.
+     * @param lookup       The user specific lookup.
      * @param <T>          The type of the lambda.
      * @return The wrapped unsafe method.
      * @throws Throwable if an error occurs during the operation.
      */
     @SuppressWarnings("unchecked")
-    public static <T> T wrapUnsafe(Class<T> lambdaClass, MethodType signature, String lambdaName, String unsafeName) throws Throwable {
+    public static <T> T wrapUnsafe(Class<T> lambdaClass, MethodType signature, String lambdaName, String unsafeName, MethodHandles.Lookup lookup) throws Throwable {
         if (UNSAFE == null) return null;
+        if (lookup == null) lookup = MethodHandles.lookup();
         Class<?> unsafeClass = UNSAFE.getClass();
-        MethodHandles.Lookup lookup = MethodHandles.lookup();
         MethodHandle handle = lookup.findVirtual(unsafeClass, unsafeName, signature);
         MethodType factory = MethodType.methodType(lambdaClass, unsafeClass);
         CallSite site = LambdaMetafactory.metafactory(lookup,
@@ -86,12 +89,13 @@ public class Unsafe {
      * @param signature    The method signature.
      * @param lambdaName   The lambda name.
      * @param unsafeName   The name of the unsafe operation.
+     *  @param lookup      The user specific lookup.
      * @param <T>          The type of the lambda.
      * @return The wrapped unsafe method, or null if an error occurs.
      */
-    public static <T> T wrapUnsafeQuietly(Class<T> lambdaClass, MethodType signature, String lambdaName, String unsafeName) {
+    public static <T> T wrapUnsafeQuietly(Class<T> lambdaClass, MethodType signature, String lambdaName, String unsafeName, MethodHandles.Lookup lookup) {
         try {
-            return wrapUnsafe(lambdaClass, signature, lambdaName, unsafeName);
+            return wrapUnsafe(lambdaClass, signature, lambdaName, unsafeName, lookup);
         } catch (Throwable ignore) {
             return null;
         }
@@ -100,26 +104,51 @@ public class Unsafe {
     /**
      * Represents Unsafe.getInt operation.
      */
-    public static final GetInt GET_INT = wrapUnsafeQuietly(GetInt.class, MethodType.methodType(int.class, Object.class, long.class), "getInt", "getInt");
+    public static final GetInt GET_INT = wrapUnsafeQuietly(GetInt.class, MethodType.methodType(int.class, Object.class, long.class), "getInt", "getInt", null);
 
     /**
      * Represents Unsafe.getLong operation.
      */
-    public static final GetLong GET_LONG = wrapUnsafeQuietly(GetLong.class, MethodType.methodType(long.class, Object.class, long.class), "getLong", "getLong");
+    public static final GetLong GET_LONG = wrapUnsafeQuietly(GetLong.class, MethodType.methodType(long.class, Object.class, long.class), "getLong", "getLong", null);
 
     /**
      * Represents Unsafe.putInt operation.
      */
-    public static final PutInt PUT_INT = wrapUnsafeQuietly(PutInt.class, MethodType.methodType(void.class, Object.class, long.class, int.class), "putInt", "putInt");
+    public static final PutInt PUT_INT = wrapUnsafeQuietly(PutInt.class, MethodType.methodType(void.class, Object.class, long.class, int.class), "putInt", "putInt", null);
 
     /**
      * Represents Unsafe.putLong operation.
      */
-    public static final PutLong PUT_LONG = wrapUnsafeQuietly(PutLong.class, MethodType.methodType(void.class, Object.class, long.class, long.class), "putLong", "putLong");
+    public static final PutLong PUT_LONG = wrapUnsafeQuietly(PutLong.class, MethodType.methodType(void.class, Object.class, long.class, long.class), "putLong", "putLong", null);
 
     /**
      * Represents Unsafe.arrayBaseOffset operation.
      */
-    public static final ArrayOffset ARRAY_OFFSET = wrapUnsafeQuietly(ArrayOffset.class, MethodType.methodType(int.class, Class.class), "arrayBaseOffset", "arrayBaseOffset");
+    @SneakyThrows
+    public static long arrayBaseOffset(Class<?> arrayClass, MethodHandles.Lookup lookup) {
+        if (UNSAFE == null) throw new IllegalStateException("Unsafe not available");
+        if (lookup == null) lookup = MethodHandles.lookup();
+        MethodHandle arrayBaseOffset;
+        long offset;
+        try {
+            arrayBaseOffset = lookup.findVirtual(Unsafe.UNSAFE.getClass(), "arrayBaseOffset", MethodType.methodType(int.class, Class.class));
+            offset = (int) arrayBaseOffset.bindTo(Unsafe.UNSAFE).invoke(arrayClass);
+        } catch (NoSuchMethodException ignore) {
+            arrayBaseOffset = lookup.findVirtual(Unsafe.UNSAFE.getClass(), "arrayBaseOffset", MethodType.methodType(long.class, Class.class));
+            offset = (long) arrayBaseOffset.bindTo(Unsafe.UNSAFE).invoke(arrayClass);
+        }
+        return offset;
+    }
+
+    /**
+     * Represents Unsafe.arrayIndexScale operation.
+     */
+    @SneakyThrows
+    public static int arrayIndexScale(Class<?> arrayClass, MethodHandles.Lookup lookup) {
+        if (UNSAFE == null) throw new IllegalStateException("Unsafe not available");
+        if (lookup == null) lookup = MethodHandles.lookup();
+        MethodHandle arrayIndexScale = lookup.findVirtual(Unsafe.UNSAFE.getClass(), "arrayIndexScale", MethodType.methodType(int.class, Class.class));
+        return  (int) arrayIndexScale.bindTo(Unsafe.UNSAFE).invoke(arrayClass);
+    }
 
 }
