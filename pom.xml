@@ -23,7 +23,7 @@
 
     <groupId>com.curioloop</groupId>
     <artifactId>number-codec</artifactId>
-    <version>1.2.2</version>
+    <version>1.2.3</version>
     <packaging>jar</packaging>
 
     <name>number-codec</name>

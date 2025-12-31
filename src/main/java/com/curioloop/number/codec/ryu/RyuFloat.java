@@ -24,7 +24,7 @@ import java.math.BigInteger;
 public final class RyuFloat {
   private static boolean DEBUG = false;
 
-  static final int MAX_FLOAT_LEN = 15;
+  public static final int MAX_FLOAT_LEN = 15;
   private static final char[] CHARS_NAN = new char[MAX_FLOAT_LEN+1];
   private static final char[] CHARS_POS_INF = new char[MAX_FLOAT_LEN+1];
   private static final char[] CHARS_NEG_INF = new char[MAX_FLOAT_LEN+1];
@@ -109,7 +109,7 @@ public final class RyuFloat {
     System.out.println(RyuFormatter.string(f) + " " + f);
   }
 
-  static Object floatTo(float value, RoundingMode roundingMode, char[] result) {
+  public static Object floatTo(float value, RoundingMode roundingMode, char[] result) {
     // Step 1: Decode the floating point number, and unify normalized and subnormal cases.
     // First, handle all the trivial cases.
     if (Float.isNaN(value)) return result == null ? null : CHARS_NAN;
