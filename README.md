@@ -32,7 +32,7 @@ This approach effectively slashes network bandwidth consumption and curtails dis
         <dependency>
             <groupId>com.curioloop</groupId>
             <artifactId>number-codec</artifactId>
-            <version>1.2.0</version>
+            <version>1.2.2</version>
         </dependency>
     </dependencies>
 
