@@ -64,7 +64,7 @@ public class ChimpCodec {
     public static void decode64(CodecSlice slice, DoubleSetter stream) throws CodecException {
         final byte[] value = slice.value();
         final int offset = slice.offset(), length = slice.length();
-        final int N = value[offset] == 0 ? 0 : (1 << value[0]);
+        final int N = value[offset] == 0 ? 0 : (1 << value[offset]);
         CodecException.notAllow((N != 0 && N < 4) || N > 256);
         try {
             slice.wrap(value, offset + 1, length - 1);

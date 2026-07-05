@@ -83,10 +83,9 @@ public final class GorillaCodec {
             int leadingZero = (short) Long.numberOfLeadingZeros(xor);
             int tailingZero = (short) Long.numberOfTrailingZeros(xor);
             long diffBits = xor >>> tailingZero;
-            int diffSize = Long.signum(diffBits) * (Double.SIZE - leadingZero - tailingZero);
-            CodecException.valueOverflow(diffSize >= (1 << MAX_BLOCK_SIZE_BITS));
-
-            int currBlock = (leadingZero << MAX_BLOCK_SIZE_BITS) | diffSize;
+            // sigBits is always non-negative (0..64).
+            int sigBits = xor == 0 ? 0 : (Double.SIZE - leadingZero - tailingZero);
+            int currBlock = (leadingZero << MAX_BLOCK_SIZE_BITS) | sigBits;
             encodeBlock(writer, prevBlock, currBlock, diffBits);
             prevBlock = currBlock;
             previous = current;
@@ -148,10 +147,8 @@ public final class GorillaCodec {
             int leadingZero = (short) Integer.numberOfLeadingZeros(xor);
             int tailingZero = (short) Integer.numberOfTrailingZeros(xor);
             int diffBits = xor >>> tailingZero;
-            int diffSize = Long.signum(diffBits) * (Float.SIZE - leadingZero - tailingZero);
-            CodecException.valueOverflow(diffSize >= (1 << MAX_BLOCK_SIZE_BITS));
-
-            int currBlock = (leadingZero << MAX_BLOCK_SIZE_BITS) | diffSize;
+            int sigBits = xor == 0 ? 0 : (Float.SIZE - leadingZero - tailingZero);
+            int currBlock = (leadingZero << MAX_BLOCK_SIZE_BITS) | sigBits;
             encodeBlock(writer, prevBlock, currBlock, diffBits);
             prevBlock = currBlock;
             previous = current;

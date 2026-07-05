@@ -93,4 +93,46 @@ public class GorillaCodecTest {
         Assertions.assertFalse(in.hasMore());
     }
 
+    /**
+     * Regression test for the XOR bit-63 + bit-0 corner case: when two
+     * consecutive values differ in both the sign bit AND the LSB of the
+     * mantissa, the historic encoder used a signed diffSize that
+     * overflowed the 7-bit blockSize field and corrupted the leading-zero
+     * field via int32 sign extension. Decoded output was silently wrong.
+     */
+    @Test void signFlipLsbFlipRoundTrip64() {
+        double prev = 1.5;
+        // Flip sign bit AND LSB of mantissa.
+        double curr = Double.longBitsToDouble(Double.doubleToLongBits(prev) ^ 0x8000000000000001L);
+        double[] values = {prev, curr};
+
+        CodecBuffer buf = CodecBuffer.newBuffer(64);
+        byte[] data = GorillaCodec.encode64(i -> values[i], values.length, buf).toArray();
+
+        List<Double> out = new ArrayList<>();
+        GorillaCodec.decode64(new CodecSlice().wrap(data), out::add);
+        Assertions.assertEquals(2, out.size());
+        Assertions.assertEquals(Double.doubleToLongBits(prev), Double.doubleToLongBits(out.get(0)),
+                "prev bits differ");
+        Assertions.assertEquals(Double.doubleToLongBits(curr), Double.doubleToLongBits(out.get(1)),
+                "curr bits differ (bug: XOR bit-63 + bit-0)");
+    }
+
+    @Test void signFlipLsbFlipRoundTrip32() {
+        float prev = 1.5f;
+        float curr = Float.intBitsToFloat(Float.floatToIntBits(prev) ^ 0x80000001);
+        float[] values = {prev, curr};
+
+        CodecBuffer buf = CodecBuffer.newBuffer(64);
+        byte[] data = GorillaCodec.encode32(i -> values[i], values.length, buf).toArray();
+
+        List<Float> out = new ArrayList<>();
+        GorillaCodec.decode32(new CodecSlice().wrap(data), out::add);
+        Assertions.assertEquals(2, out.size());
+        Assertions.assertEquals(Float.floatToIntBits(prev), Float.floatToIntBits(out.get(0)),
+                "prev bits differ");
+        Assertions.assertEquals(Float.floatToIntBits(curr), Float.floatToIntBits(out.get(1)),
+                "curr bits differ (bug: XOR bit-31 + bit-0)");
+    }
+
 }
